@@ -132,7 +132,11 @@ func (w *WordlistInput) readFile(path string) error {
 			if re.Match(text) {
 				for _, ext := range w.config.Extensions {
 					contnt := re.ReplaceAll(text, []byte(ext))
-					data = append(data, []byte(contnt))
+					contnt2, ok := replaceTemplates(string(contnt), w.templates)
+					if !ok {
+						continue
+					}
+					data = append(data, []byte(contnt2))
 				}
 			} else {
 				text := reader.Text()
@@ -142,10 +146,10 @@ func (w *WordlistInput) readFile(path string) error {
 					if !ok {
 						continue
 					}
-				}
-				text, ok = replaceTemplates(text, w.templates)
-				if !ok {
-					continue
+					text, ok = replaceTemplates(text, w.templates)
+					if !ok {
+						continue
+					}
 				}
 				data = append(data, []byte(text))
 			}
@@ -157,10 +161,10 @@ func (w *WordlistInput) readFile(path string) error {
 				if !ok {
 					continue
 				}
-			}
-			text, ok = replaceTemplates(text, w.templates)
-			if !ok {
-				continue
+				text, ok = replaceTemplates(text, w.templates)
+				if !ok {
+					continue
+				}
 			}
 			data = append(data, []byte(text))
 			if w.keyword == "FUZZ" && len(w.config.Extensions) > 0 {
