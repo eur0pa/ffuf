@@ -5,15 +5,18 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/eur0pa/ffuf/pkg/ffuf"
+	tld "github.com/jpillora/go-tld"
 )
 
 type WordlistInput struct {
-	config   *ffuf.Config
-	data     [][]byte
-	position int
-	keyword  string
+	config    *ffuf.Config
+	data      [][]byte
+	position  int
+	keyword   string
+	templates map[string]string
 }
 
 func NewWordlistInput(keyword string, value string, conf *ffuf.Config) (*WordlistInput, error) {
@@ -21,8 +24,23 @@ func NewWordlistInput(keyword string, value string, conf *ffuf.Config) (*Wordlis
 	wl.keyword = keyword
 	wl.config = conf
 	wl.position = 0
+	wl.templates = make(map[string]string)
 	var valid bool
 	var err error
+	// templated replacements
+	t := time.Now()
+	wl.templates["YYYY"] = t.Format("2006")
+	wl.templates["YY"] = t.Format("06")
+	wl.templates["MM"] = t.Format("01")
+	wl.templates["DD"] = t.Format("02")
+
+	u, err := tld.Parse(conf.Url)
+	if err == nil {
+		wl.templates["SUB"] = u.Subdomain
+		wl.templates["HOST"] = u.Domain
+		wl.templates["TLD"] = u.TLD
+	}
+
 	// stdin?
 	if value == "-" {
 		// yes
@@ -37,6 +55,7 @@ func NewWordlistInput(keyword string, value string, conf *ffuf.Config) (*Wordlis
 	if valid {
 		err = wl.readFile(value)
 	}
+
 	return &wl, err
 }
 
@@ -124,6 +143,10 @@ func (w *WordlistInput) readFile(path string) error {
 						continue
 					}
 				}
+				text, ok = replaceTemplates(text, w.templates)
+				if !ok {
+					continue
+				}
 				data = append(data, []byte(text))
 			}
 		} else {
@@ -134,6 +157,10 @@ func (w *WordlistInput) readFile(path string) error {
 				if !ok {
 					continue
 				}
+			}
+			text, ok = replaceTemplates(text, w.templates)
+			if !ok {
+				continue
 			}
 			data = append(data, []byte(text))
 			if w.keyword == "FUZZ" && len(w.config.Extensions) > 0 {
@@ -162,4 +189,45 @@ func stripComments(text string) (string, bool) {
 		return text, true
 	}
 	return text[:index], true
+}
+
+// replaceTemplates performs the templated dynamic replacements
+func replaceTemplates(text string, t map[string]string) (string, bool) {
+	if strings.Contains(text, "{YYYY}") {
+		if t["YYYY"] != "" {
+			text = strings.ReplaceAll(text, "{YYYY}", t["YYYY"])
+		}
+	}
+	if strings.Contains(text, "{YY}") {
+		if t["YY"] != "" {
+			text = strings.ReplaceAll(text, "{YY}", t["YY"])
+		}
+	}
+	if strings.Contains(text, "{MM}") {
+		if t["MM"] != "" {
+			text = strings.ReplaceAll(text, "{MM}", t["MM"])
+		}
+	}
+	if strings.Contains(text, "{DD}") {
+		if t["DD"] != "" {
+			text = strings.ReplaceAll(text, "{DD}", t["DD"])
+		}
+	}
+	if strings.Contains(text, "{SUB}") {
+		if t["SUB"] != "" {
+			text = strings.ReplaceAll(text, "{SUB}", t["SUB"])
+		}
+	}
+	if strings.Contains(text, "{HOST}") {
+		if t["HOST"] != "" {
+			text = strings.ReplaceAll(text, "{HOST}", t["HOST"])
+		}
+	}
+	if strings.Contains(text, "{TLD}") {
+		if t["TLD"] != "" {
+			text = strings.ReplaceAll(text, "{TLD}", t["TLD"])
+		}
+	}
+
+	return text, true
 }

@@ -1,3 +1,13 @@
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/jakewarren/tldomains v0.0.0-20191202214805-dd0852eb6e50 h1:jriPh4zTexYtU7INCbpCyjGMl1eLRXYgj4SR3GDoSeI=
+github.com/jakewarren/tldomains v0.0.0-20191202214805-dd0852eb6e50/go.mod h1:EXGOllbslPVEc2QIZBtYhycS8CjE5jP+2W1Ve6I18QM=
+github.com/jpillora/go-tld v1.0.0 h1:W0Wz3fYT9WCDNJXcXc58uV7sriLnVeELeOU5MP5X42M=
+github.com/jpillora/go-tld v1.0.0/go.mod h1:kitBxOF//DR5FxYeIGw+etdiiTIq5S7bx0dwy1GUNAk=
 github.com/pelletier/go-toml v1.8.1 h1:1Nf83orprkJyknT6h7zbuEGUEjcyVlCxSUGTENmNCRM=
 github.com/pelletier/go-toml v1.8.1/go.mod h1:T2/BmBdy8dvIRq1a/8aqjN41wvWlN4lrapLU/GW4pbc=
+golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
+golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e h1:3G+cUijn7XD+S4eJFddp53Pv7+slrESplyjG25HgL+k=
+golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e/go.mod h1:qpuaurCH72eLCgpAm/N6yyVIVM9cpaDIP3A8BGJEC5A=
+golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
