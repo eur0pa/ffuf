@@ -56,6 +56,8 @@ type GeneralOptions struct {
 	StopOnErrors           bool
 	Threads                int
 	Verbose                bool
+	Waf1                   bool
+	Waf2                   bool
 }
 
 type InputOptions struct {
@@ -75,6 +77,7 @@ type OutputOptions struct {
 	OutputDirectory string
 	OutputFile      string
 	OutputFormat    string
+	OriginalOutput  bool
 }
 
 type FilterOptions struct {
@@ -114,6 +117,8 @@ func NewConfigOptions() *ConfigOptions {
 	c.General.StopOnErrors = false
 	c.General.Threads = 40
 	c.General.Verbose = false
+	c.General.Waf1 = false
+	c.General.Waf2 = false
 	c.HTTP.Data = ""
 	c.HTTP.FollowRedirects = false
 	c.HTTP.IgnoreBody = false
@@ -140,6 +145,7 @@ func NewConfigOptions() *ConfigOptions {
 	c.Output.OutputDirectory = ""
 	c.Output.OutputFile = ""
 	c.Output.OutputFormat = "json"
+	c.Output.OriginalOutput = false
 	return c
 }
 
@@ -269,6 +275,24 @@ func ConfigFromOptions(parseOpts *ConfigOptions, ctx context.Context, cancel con
 		}
 	}
 
+	//Prepare WAF tricks 1 && 2
+	if parseOpts.General.Waf1 {
+		conf.Headers["Referer"] = conf.Url
+	}
+
+	if parseOpts.General.Waf2 {
+		conf.Headers["Source-IP"] = "127.0.0.1"
+		conf.Headers["True-Client-IP"] = "127.0.0.1"
+		conf.Headers["X-Client-IP"] = "127.0.0.1"
+		conf.Headers["X-Forwarded-For"] = "127.0.0.1"
+		conf.Headers["X-Originating-IP"] = "127.0.0.1"
+		conf.Headers["X-Real-IP"] = "127.0.0.1"
+		conf.Headers["X-Remote-Addr"] = "127.0.0.1"
+		conf.Headers["X-Remote-IP"] = "127.0.0.1"
+		conf.Headers["XL-Proxy-Client-IP"] = "127.0.0.1"
+		conf.Headers["Z-Forwarded-For"] = "127.0.0.1"
+	}
+
 	//Prepare delay
 	d := strings.Split(parseOpts.General.Delay, "-")
 	if len(d) > 2 {
@@ -313,7 +337,7 @@ func ConfigFromOptions(parseOpts *ConfigOptions, ctx context.Context, cancel con
 	//Check the output file format option
 	if parseOpts.Output.OutputFile != "" {
 		//No need to check / error out if output file isn't defined
-		outputFormats := []string{"all", "json", "ejson", "html", "md", "csv", "ecsv"}
+		outputFormats := []string{"all", "json", "ejson", "html", "md", "csv", "ecsv", "txt"}
 		found := false
 		for _, f := range outputFormats {
 			if f == parseOpts.Output.OutputFormat {
@@ -351,6 +375,7 @@ func ConfigFromOptions(parseOpts *ConfigOptions, ctx context.Context, cancel con
 	conf.Method = parseOpts.HTTP.Method
 	conf.OutputFile = parseOpts.Output.OutputFile
 	conf.OutputDirectory = parseOpts.Output.OutputDirectory
+	conf.OriginalOutput = parseOpts.Output.OriginalOutput
 	conf.IgnoreBody = parseOpts.HTTP.IgnoreBody
 	conf.Quiet = parseOpts.General.Quiet
 	conf.StopOn403 = parseOpts.General.StopOn403
@@ -365,6 +390,8 @@ func ConfigFromOptions(parseOpts *ConfigOptions, ctx context.Context, cancel con
 	conf.MaxTime = parseOpts.General.MaxTime
 	conf.MaxTimeJob = parseOpts.General.MaxTimeJob
 	conf.Verbose = parseOpts.General.Verbose
+	conf.Waf1 = parseOpts.General.Waf1
+	conf.Waf2 = parseOpts.General.Waf2
 
 	// Handle copy as curl situation where POST method is implied by --data flag. If method is set to anything but GET, NOOP
 	if len(conf.Data) > 0 &&
@@ -379,8 +406,9 @@ func ConfigFromOptions(parseOpts *ConfigOptions, ctx context.Context, cancel con
 
 	for _, provider := range conf.InputProviders {
 		if !keywordPresent(provider.Keyword, &conf) {
-			errmsg := fmt.Sprintf("Keyword %s defined, but not found in headers, method, URL or POST data.", provider.Keyword)
-			errs.Add(fmt.Errorf(errmsg))
+			conf.Url = conf.Url + provider.Keyword
+			//errmsg := fmt.Sprintf("Keyword %s defined, but not found in headers, method, URL or POST data.", provider.Keyword)
+			//errs.Add(fmt.Errorf(errmsg))
 		}
 	}
 

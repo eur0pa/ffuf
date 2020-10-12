@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ffuf/ffuf/pkg/ffuf"
+	"github.com/eur0pa/ffuf/pkg/ffuf"
 )
 
 const (
@@ -90,7 +90,7 @@ func (s *Stdoutput) Banner() {
 
 		if s.config.OutputFormat == "all" {
 			// Actually... append all extensions
-			OutputFile += ".{json,ejson,html,md,csv,ecsv}"
+			OutputFile += ".{json,ejson,html,md,csv,ecsv,txt}"
 		}
 
 		printOption([]byte("Output file"), []byte(OutputFile))
@@ -246,6 +246,12 @@ func (s *Stdoutput) writeToAll(config *ffuf.Config, res []Result) error {
 		s.Error(err.Error())
 	}
 
+	s.config.OutputFile = BaseFilename + ".txt"
+	err = writeTXT(s.config, s.Results)
+	if err != nil {
+		s.Error(err.Error())
+	}
+
 	return nil
 
 }
@@ -267,6 +273,8 @@ func (s *Stdoutput) Finalize() error {
 			err = writeCSV(s.config, s.Results, false)
 		} else if s.config.OutputFormat == "ecsv" {
 			err = writeCSV(s.config, s.Results, true)
+		} else if s.config.OutputFormat == "txt" {
+			err = writeTXT(s.config, s.Results)
 		}
 		if err != nil {
 			s.Error(err.Error())
@@ -338,6 +346,8 @@ func (s *Stdoutput) printResult(resp ffuf.Response) {
 		if len(resp.Request.Input) > 1 || s.config.Verbose || len(s.config.OutputDirectory) > 0 {
 			// Print a multi-line result (when using multiple input keywords and wordlists)
 			s.resultMultiline(resp)
+		} else if s.config.OriginalOutput {
+			s.resultOriginal(resp)
 		} else {
 			s.resultNormal(resp)
 		}
@@ -400,7 +410,20 @@ func (s *Stdoutput) resultMultiline(resp ffuf.Response) {
 	fmt.Printf("%s\n%s\n", res_hdr, reslines)
 }
 
+//Custom clickable stdout format
 func (s *Stdoutput) resultNormal(resp ffuf.Response) {
+	res := fmt.Sprintf("%s%-3d %-9d %-5d %-5d %s", TERMINAL_CLEAR_LINE, resp.StatusCode, resp.ContentLength, resp.ContentWords, resp.ContentLines, resp.Request.Url)
+
+	redirectLocation := resp.GetRedirectLocation(false)
+	if redirectLocation != "" {
+		res = fmt.Sprintf("%s -> %s", res, redirectLocation)
+	}
+
+	fmt.Println(s.colorize(res, resp.StatusCode))
+}
+
+//Original stdout format
+func (s *Stdoutput) resultOriginal(resp ffuf.Response) {
 	res := fmt.Sprintf("%s%-23s [Status: %s, Size: %d, Words: %d, Lines: %d]", TERMINAL_CLEAR_LINE, s.prepareInputsOneLine(resp), s.colorize(fmt.Sprintf("%d", resp.StatusCode), resp.StatusCode), resp.ContentLength, resp.ContentWords, resp.ContentLines)
 	fmt.Println(res)
 }

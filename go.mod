@@ -1,4 +1,4 @@
-module github.com/ffuf/ffuf
+module github.com/eur0pa/ffuf
 
 go 1.13
 

@@ -32,6 +32,7 @@ type Config struct {
 	OutputDirectory        string                    `json:"outputdirectory"`
 	OutputFile             string                    `json:"outputfile"`
 	OutputFormat           string                    `json:"outputformat"`
+	OriginalOutput         bool                      `json:"originaloutput"`
 	ProgressFrequency      int                       `json:"-"`
 	ProxyURL               string                    `json:"proxyurl"`
 	Quiet                  bool                      `json:"quiet"`
@@ -46,6 +47,8 @@ type Config struct {
 	Timeout                int                       `json:"timeout"`
 	Url                    string                    `json:"url"`
 	Verbose                bool                      `json:"verbose"`
+	Waf1                   bool                      `json:"waf1"`
+	Waf2                   bool                      `json:"waf2"`
 }
 
 type InputProviderConfig struct {
@@ -75,6 +78,7 @@ func NewConfig(ctx context.Context, cancel context.CancelFunc) Config {
 	conf.MaxTime = 0
 	conf.MaxTimeJob = 0
 	conf.Method = "GET"
+	conf.OriginalOutput = false
 	conf.ProgressFrequency = 125
 	conf.ProxyURL = ""
 	conf.Quiet = false
@@ -87,6 +91,8 @@ func NewConfig(ctx context.Context, cancel context.CancelFunc) Config {
 	conf.Timeout = 10
 	conf.Url = ""
 	conf.Verbose = false
+	conf.Waf1 = false
+	conf.Waf2 = false
 	return conf
 }
 

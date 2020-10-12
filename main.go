@@ -9,11 +9,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ffuf/ffuf/pkg/ffuf"
-	"github.com/ffuf/ffuf/pkg/filter"
-	"github.com/ffuf/ffuf/pkg/input"
-	"github.com/ffuf/ffuf/pkg/output"
-	"github.com/ffuf/ffuf/pkg/runner"
+	"github.com/eur0pa/ffuf/pkg/ffuf"
+	"github.com/eur0pa/ffuf/pkg/filter"
+	"github.com/eur0pa/ffuf/pkg/input"
+	"github.com/eur0pa/ffuf/pkg/output"
+	"github.com/eur0pa/ffuf/pkg/runner"
 )
 
 type multiStringFlag []string
@@ -66,11 +66,14 @@ func ParseFlags(opts *ffuf.ConfigOptions) *ffuf.ConfigOptions {
 	flag.BoolVar(&opts.General.StopOnAll, "sa", opts.General.StopOnAll, "Stop on all error cases. Implies -sf and -se.")
 	flag.BoolVar(&opts.General.StopOnErrors, "se", opts.General.StopOnErrors, "Stop on spurious errors")
 	flag.BoolVar(&opts.General.Verbose, "v", opts.General.Verbose, "Verbose output, printing full URL and redirect location (if any) with the results.")
+	flag.BoolVar(&opts.General.Waf1, "waf", opts.General.Waf1, "WAF tricks: Referer header")
+	flag.BoolVar(&opts.General.Waf2, "waf2", opts.General.Waf2, "WAF tricks: X-IP localhost headers")
 	flag.BoolVar(&opts.HTTP.FollowRedirects, "r", opts.HTTP.FollowRedirects, "Follow redirects")
 	flag.BoolVar(&opts.HTTP.IgnoreBody, "ignore-body", opts.HTTP.IgnoreBody, "Do not fetch the response content.")
 	flag.BoolVar(&opts.HTTP.Recursion, "recursion", opts.HTTP.Recursion, "Scan recursively. Only FUZZ keyword is supported, and URL (-u) has to end in it.")
 	flag.BoolVar(&opts.Input.DirSearchCompat, "D", opts.Input.DirSearchCompat, "DirSearch wordlist compatibility mode. Used in conjunction with -e flag.")
 	flag.BoolVar(&opts.Input.IgnoreWordlistComments, "ic", opts.Input.IgnoreWordlistComments, "Ignore wordlist comments")
+	flag.BoolVar(&opts.Output.OriginalOutput, "or", opts.Output.OriginalOutput, "Use ffuf's original output format for results")
 	flag.IntVar(&opts.General.MaxTime, "maxtime", opts.General.MaxTime, "Maximum running time in seconds for entire process.")
 	flag.IntVar(&opts.General.MaxTimeJob, "maxtime-job", opts.General.MaxTimeJob, "Maximum running time in seconds per job.")
 	flag.IntVar(&opts.General.Rate, "rate", opts.General.Rate, "Rate of requests per second")

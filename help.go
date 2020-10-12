@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ffuf/ffuf/pkg/ffuf"
+	"github.com/eur0pa/ffuf/pkg/ffuf"
 )
 
 type UsageSection struct {
@@ -61,7 +61,7 @@ func Usage() {
 		Description:   "",
 		Flags:         make([]UsageFlag, 0),
 		Hidden:        false,
-		ExpectedFlags: []string{"ac", "acc", "c", "config", "maxtime", "maxtime-job", "p", "rate", "s", "sa", "se", "sf", "t", "v", "V"},
+		ExpectedFlags: []string{"ac", "acc", "c", "config", "maxtime", "maxtime-job", "p", "rate", "s", "sa", "se", "sf", "t", "v", "V", "waf", "waf2"},
 	}
 	u_compat := UsageSection{
 		Name:          "COMPATIBILITY OPTIONS",
@@ -96,7 +96,7 @@ func Usage() {
 		Description:   "Options for output. Output file formats, file names and debug file locations.",
 		Flags:         make([]UsageFlag, 0),
 		Hidden:        false,
-		ExpectedFlags: []string{"debug-log", "o", "of", "od"},
+		ExpectedFlags: []string{"debug-log", "o", "of", "od", "or"},
 	}
 	sections := []UsageSection{u_http, u_general, u_compat, u_matcher, u_filter, u_input, u_output}
 
@@ -147,7 +147,7 @@ func Usage() {
 	fmt.Printf("  Fuzz multiple locations. Match only responses reflecting the value of \"VAL\" keyword. Colored.\n")
 	fmt.Printf("    ffuf -w params.txt:PARAM -w values.txt:VAL -u https://example.org/?PARAM=VAL -mr \"VAL\" -c\n\n")
 
-	fmt.Printf("  More information and examples: https://github.com/ffuf/ffuf\n\n")
+	fmt.Printf("  More information and examples: https://github.com/eur0pa/ffuf\n\n")
 }
 
 func strInSlice(val string, slice []string) bool {
