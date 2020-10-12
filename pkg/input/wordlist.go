@@ -196,36 +196,50 @@ func replaceTemplates(text string, t map[string]string) (string, bool) {
 	if strings.Contains(text, "{YYYY}") {
 		if t["YYYY"] != "" {
 			text = strings.ReplaceAll(text, "{YYYY}", t["YYYY"])
+		} else {
+			return "", false
 		}
 	}
 	if strings.Contains(text, "{YY}") {
 		if t["YY"] != "" {
 			text = strings.ReplaceAll(text, "{YY}", t["YY"])
+		} else {
+			return "", false
 		}
 	}
 	if strings.Contains(text, "{MM}") {
 		if t["MM"] != "" {
 			text = strings.ReplaceAll(text, "{MM}", t["MM"])
+		} else {
+			return "", false
 		}
 	}
 	if strings.Contains(text, "{DD}") {
 		if t["DD"] != "" {
 			text = strings.ReplaceAll(text, "{DD}", t["DD"])
+		} else {
+			return "", false
 		}
 	}
 	if strings.Contains(text, "{SUB}") {
 		if t["SUB"] != "" {
 			text = strings.ReplaceAll(text, "{SUB}", t["SUB"])
+		} else {
+			return "", false
 		}
 	}
 	if strings.Contains(text, "{HOST}") {
 		if t["HOST"] != "" {
 			text = strings.ReplaceAll(text, "{HOST}", t["HOST"])
+		} else {
+			return "", false
 		}
 	}
 	if strings.Contains(text, "{TLD}") {
 		if t["TLD"] != "" {
 			text = strings.ReplaceAll(text, "{TLD}", t["TLD"])
+		} else {
+			return "", false
 		}
 	}
 
