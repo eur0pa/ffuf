@@ -123,7 +123,9 @@ func (w *WordlistInput) readFile(path string) error {
 	defer file.Close()
 
 	var data [][]byte
+	var data2 [][]byte
 	var ok bool
+	uniq := make(map[string]struct{})
 	reader := bufio.NewScanner(file)
 	re := regexp.MustCompile(`(?i)%ext%`)
 	for reader.Scan() {
@@ -174,7 +176,18 @@ func (w *WordlistInput) readFile(path string) error {
 			}
 		}
 	}
-	w.data = data
+	// Deduplicate
+	for _, line := range data {
+		x := string(line)
+		if _, ok := uniq[x]; !ok {
+			uniq[x] = struct{}{}
+		}
+	}
+	for line := range uniq {
+		data2 = append(data2, []byte(line))
+	}
+
+	w.data = data2
 	return reader.Err()
 }
 
