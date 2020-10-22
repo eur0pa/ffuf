@@ -171,7 +171,7 @@ func (w *WordlistInput) readFile(path string) error {
 	for line := range uniq {
 		data2 = append(data2, []byte(line))
 	}
-	w.data = data
+	w.data = data2
 	return reader.Err()
 }
 
