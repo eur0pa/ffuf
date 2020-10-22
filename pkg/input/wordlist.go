@@ -129,26 +129,17 @@ func (w *WordlistInput) readFile(path string) error {
 	reader := bufio.NewScanner(file)
 	re := regexp.MustCompile(`(?i)%ext%`)
 	for reader.Scan() {
+		text := replaceTemplates(reader.Text(), w.templates)
+		textB := []byte(text)
 		if w.config.DirSearchCompat && len(w.config.Extensions) > 0 {
-			text := []byte(reader.Text())
-			if re.Match(text) {
+			if re.Match(textB) {
 				for _, ext := range w.config.Extensions {
-					contnt := re.ReplaceAll(text, []byte(ext))
-					contnt2, ok := replaceTemplates(string(contnt), w.templates)
-					if !ok {
-						continue
-					}
-					data = append(data, []byte(contnt2))
+					contnt := re.ReplaceAll(textB, []byte(ext))
+					data = append(data, []byte(contnt))
 				}
 			} else {
-				text := reader.Text()
-
 				if w.config.IgnoreWordlistComments {
 					text, ok = stripComments(text)
-					if !ok {
-						continue
-					}
-					text, ok = replaceTemplates(text, w.templates)
 					if !ok {
 						continue
 					}
@@ -156,14 +147,8 @@ func (w *WordlistInput) readFile(path string) error {
 				data = append(data, []byte(text))
 			}
 		} else {
-			text := reader.Text()
-
 			if w.config.IgnoreWordlistComments {
 				text, ok = stripComments(text)
-				if !ok {
-					continue
-				}
-				text, ok = replaceTemplates(text, w.templates)
 				if !ok {
 					continue
 				}
@@ -186,8 +171,7 @@ func (w *WordlistInput) readFile(path string) error {
 	for line := range uniq {
 		data2 = append(data2, []byte(line))
 	}
-
-	w.data = data2
+	w.data = data
 	return reader.Err()
 }
 
@@ -209,56 +193,42 @@ func stripComments(text string) (string, bool) {
 }
 
 // replaceTemplates performs the templated dynamic replacements
-func replaceTemplates(text string, t map[string]string) (string, bool) {
+func replaceTemplates(text string, t map[string]string) string {
 	if strings.Contains(text, "{YYYY}") {
 		if t["YYYY"] != "" {
 			text = strings.ReplaceAll(text, "{YYYY}", t["YYYY"])
-		} else {
-			return "", false
 		}
 	}
 	if strings.Contains(text, "{YY}") {
 		if t["YY"] != "" {
 			text = strings.ReplaceAll(text, "{YY}", t["YY"])
-		} else {
-			return "", false
 		}
 	}
 	if strings.Contains(text, "{MM}") {
 		if t["MM"] != "" {
 			text = strings.ReplaceAll(text, "{MM}", t["MM"])
-		} else {
-			return "", false
 		}
 	}
 	if strings.Contains(text, "{DD}") {
 		if t["DD"] != "" {
 			text = strings.ReplaceAll(text, "{DD}", t["DD"])
-		} else {
-			return "", false
 		}
 	}
 	if strings.Contains(text, "{SUB}") {
 		if t["SUB"] != "" {
 			text = strings.ReplaceAll(text, "{SUB}", t["SUB"])
-		} else {
-			return "", false
 		}
 	}
 	if strings.Contains(text, "{HOST}") {
 		if t["HOST"] != "" {
 			text = strings.ReplaceAll(text, "{HOST}", t["HOST"])
-		} else {
-			return "", false
 		}
 	}
 	if strings.Contains(text, "{TLD}") {
 		if t["TLD"] != "" {
 			text = strings.ReplaceAll(text, "{TLD}", t["TLD"])
-		} else {
-			return "", false
 		}
 	}
 
-	return text, true
+	return text
 }
