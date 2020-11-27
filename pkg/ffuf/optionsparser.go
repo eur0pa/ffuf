@@ -73,11 +73,12 @@ type InputOptions struct {
 }
 
 type OutputOptions struct {
-	DebugLog        string
-	OutputDirectory string
-	OutputFile      string
-	OutputFormat    string
-	OriginalOutput  bool
+	DebugLog              string
+	OutputDirectory       string
+	OutputFile            string
+	OutputFormat          string
+	OriginalOutput        bool
+	OutputCreateEmptyFile bool
 }
 
 type FilterOptions struct {
@@ -146,6 +147,7 @@ func NewConfigOptions() *ConfigOptions {
 	c.Output.OutputFile = ""
 	c.Output.OutputFormat = "json"
 	c.Output.OriginalOutput = false
+	c.Output.OutputCreateEmptyFile = false
 	return c
 }
 
@@ -399,6 +401,7 @@ func ConfigFromOptions(parseOpts *ConfigOptions, ctx context.Context, cancel con
 	conf.OutputFile = parseOpts.Output.OutputFile
 	conf.OutputDirectory = parseOpts.Output.OutputDirectory
 	conf.OriginalOutput = parseOpts.Output.OriginalOutput
+	conf.OutputCreateEmptyFile = parseOpts.Output.OutputCreateEmptyFile
 	conf.IgnoreBody = parseOpts.HTTP.IgnoreBody
 	conf.Quiet = parseOpts.General.Quiet
 	conf.StopOn403 = parseOpts.General.StopOn403
