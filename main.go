@@ -74,7 +74,7 @@ func ParseFlags(opts *ffuf.ConfigOptions) *ffuf.ConfigOptions {
 	flag.BoolVar(&opts.HTTP.Recursion, "recursion", opts.HTTP.Recursion, "Scan recursively. Only FUZZ keyword is supported, and URL (-u) has to end in it.")
 	flag.BoolVar(&opts.Input.DirSearchCompat, "D", opts.Input.DirSearchCompat, "DirSearch wordlist compatibility mode. Used in conjunction with -e flag.")
 	flag.BoolVar(&opts.Input.IgnoreWordlistComments, "ic", opts.Input.IgnoreWordlistComments, "Ignore wordlist comments")
-	flag.BoolVar(&opts.Output.OriginalOutput, "or", opts.Output.OriginalOutput, "Use ffuf's original output format for results")
+	flag.BoolVar(&opts.Output.OriginalOutput, "orig", opts.Output.OriginalOutput, "Use ffuf's original output format for results")
 	flag.IntVar(&opts.General.MaxTime, "maxtime", opts.General.MaxTime, "Maximum running time in seconds for entire process.")
 	flag.IntVar(&opts.General.MaxTimeJob, "maxtime-job", opts.General.MaxTimeJob, "Maximum running time in seconds per job.")
 	flag.IntVar(&opts.General.Rate, "rate", opts.General.Rate, "Rate of requests per second")
