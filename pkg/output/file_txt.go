@@ -9,6 +9,10 @@ import (
 )
 
 func writeTXT(config *ffuf.Config, res []Result) error {
+	if config.OutputCreateEmptyFile && (len(res) == 0) {
+		return nil
+	}
+
 	f, err := os.Create(config.OutputFile)
 	if err != nil {
 		return err
