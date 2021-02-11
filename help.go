@@ -89,7 +89,7 @@ func Usage() {
 		Description:   "Options for input data for fuzzing. Wordlists and input generators.",
 		Flags:         make([]UsageFlag, 0),
 		Hidden:        false,
-		ExpectedFlags: []string{"D", "ic", "input-cmd", "input-num", "mode", "request", "request-proto", "e", "e2", "w"},
+		ExpectedFlags: []string{"D", "ic", "input-cmd", "input-num", "input-shell", "mode", "request", "request-proto", "e", "e2", "w"},
 	}
 	u_output := UsageSection{
 		Name:          "OUTPUT OPTIONS",
