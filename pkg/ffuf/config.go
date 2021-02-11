@@ -17,6 +17,7 @@ type Config struct {
 	Delay                  optRange                  `json:"delay"`
 	DirSearchCompat        bool                      `json:"dirsearch_compatibility"`
 	Extensions             []string                  `json:"extensions"`
+	Extensions2            []string                  `json:"extensions2"`
 	Filters                map[string]FilterProvider `json:"filters"`
 	FollowRedirects        bool                      `json:"follow_redirects"`
 	Headers                map[string]string         `json:"headers"`
@@ -69,6 +70,7 @@ func NewConfig(ctx context.Context, cancel context.CancelFunc) Config {
 	conf.Delay = optRange{0, 0, false, false}
 	conf.DirSearchCompat = false
 	conf.Extensions = make([]string, 0)
+	conf.Extensions2 = make([]string, 0)
 	conf.Filters = make(map[string]FilterProvider)
 	conf.FollowRedirects = false
 	conf.Headers = make(map[string]string)

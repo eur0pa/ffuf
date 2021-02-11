@@ -63,6 +63,7 @@ type GeneralOptions struct {
 type InputOptions struct {
 	DirSearchCompat        bool
 	Extensions             string
+	Extensions2            string
 	IgnoreWordlistComments bool
 	InputMode              string
 	InputNum               int
@@ -133,6 +134,7 @@ func NewConfigOptions() *ConfigOptions {
 	c.HTTP.URL = ""
 	c.Input.DirSearchCompat = false
 	c.Input.Extensions = ""
+	c.Input.Extensions2 = ""
 	c.Input.IgnoreWordlistComments = false
 	c.Input.InputMode = "clusterbomb"
 	c.Input.InputNum = 100
@@ -169,6 +171,10 @@ func ConfigFromOptions(parseOpts *ConfigOptions, ctx context.Context, cancel con
 	if parseOpts.Input.Extensions != "" {
 		extensions := strings.Split(parseOpts.Input.Extensions, ",")
 		conf.Extensions = extensions
+	}
+	if parseOpts.Input.Extensions2 != "" {
+		extensions2 := strings.Split(parseOpts.Input.Extensions2, ",")
+		conf.Extensions2 = extensions2
 	}
 
 	// Convert cookies to a header
