@@ -45,68 +45,36 @@ const (
   </head>
 
   <body>
-    <nav>
-      <div class="nav-wrapper">
-        <a href="#" class="brand-logo">FFUF</a>
-        <ul id="nav-mobile" class="right hide-on-med-and-down">
-        </ul>
-      </div>
-    </nav>
-
     <main class="section no-pad-bot" id="index-banner">
       <div class="container">
-        <br /><br />
-        <h1 class="header center ">FFUF Report</h1>
-        <div class="row center">
 
-		<pre>{{ .CommandLine }}</pre>
-		<pre>{{ .Time }}</pre>
-
-   <table id="ffufreport">
+      <table id="ffufreport">
         <thead>
-        <div style="display:none">
-|result_raw|StatusCode|Input|Position|ContentLength|ContentWords|ContentLines|
-        </div>
           <tr>
               <th>Status</th>
-{{ range .Keys }}              <th>{{ . }}</th>
-{{ end }}
-			  <th>URL</th>
-			  <th>Redirect location</th>
-              <th>Position</th>
               <th>Length</th>
               <th>Words</th>
 			  <th>Lines</th>
-			  <th>Type</th>
-			  <th>Resultfile</th>
+			  <th>URL</th>
+			  <th>Redirect location</th>
           </tr>
         </thead>
 
         <tbody>
 			{{range $result := .Results}}
-                <div style="display:none">
-|result_raw|{{ $result.StatusCode }}{{ range $keyword, $value := $result.Input }}|{{ $value | printf "%s" }}{{ end }}|{{ $result.Url }}|{{ $result.RedirectLocation }}|{{ $result.Position }}|{{ $result.ContentLength }}|{{ $result.ContentWords }}|{{ $result.ContentLines }}|{{ $result.ContentType }}|
-                </div>
                 <tr class="result-{{ $result.StatusCode }}" style="background-color: {{$result.HTMLColor}};">
                     <td><font color="black" class="status-code">{{ $result.StatusCode }}</font></td>
-                    {{ range $keyword, $value := $result.Input }}
-                        <td>{{ $value | printf "%s" }}</td>
-                    {{ end }}
-                    <td><a href="{{ $result.Url }}">{{ $result.Url }}</a></td>
-                    <td><a href="{{ $result.RedirectLocation }}">{{ $result.RedirectLocation }}</a></td>
-                    <td>{{ $result.Position }}</td>
                     <td>{{ $result.ContentLength }}</td>
                     <td>{{ $result.ContentWords }}</td>
 					<td>{{ $result.ContentLines }}</td>
-					<td>{{ $result.ContentType }}</td>
-                    <td>{{ $result.ResultFile }}</td>
+                    <td><a href="{{ $result.Url }}">{{ $result.Url }}</a></td>
+                    <td><a href="{{ $result.RedirectLocation }}">{{ $result.RedirectLocation }}</a></td>
                 </tr>
             {{ end }}
         </tbody>
       </table>
 
         </div>
-        <br /><br />
       </div>
     </main>
 
@@ -178,10 +146,10 @@ func colorizeResults(results []Result) []Result {
 
 func writeHTML(config *ffuf.Config, results []Result) error {
 
-  if(config.OutputCreateEmptyFile && (len(results) == 0)){
+	if config.OutputCreateEmptyFile && (len(results) == 0) {
 		return nil
-  }
-  
+	}
+
 	results = colorizeResults(results)
 
 	ti := time.Now()
