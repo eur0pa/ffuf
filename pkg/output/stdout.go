@@ -84,6 +84,13 @@ func (s *Stdoutput) Banner() {
 		}
 		printOption([]byte("Extensions"), []byte(exts))
 	}
+	if len(s.config.Extensions2) > 0 {
+		exts := ""
+		for _, ext := range s.config.Extensions2 {
+			exts = fmt.Sprintf("%s%s ", exts, ext)
+		}
+		printOption([]byte("Extensions2"), []byte(exts))
+	}
 
 	// Output file info
 	if len(s.config.OutputFile) > 0 {
