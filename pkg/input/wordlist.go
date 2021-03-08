@@ -130,21 +130,32 @@ func (w *WordlistInput) readFile(path string) error {
 	re := regexp.MustCompile(`%EXT%`)
 	re2 := regexp.MustCompile(`%EXT2%`)
 	for reader.Scan() {
-		text := replaceTemplates(reader.Text(), w.templates)
-		textB := []byte(text)
-		if w.config.DirSearchCompat && len(w.config.Extensions) > 0 {
-			if len(w.config.Extensions2) > 0 {
-				if re2.Match(textB) {
-					for _, ext := range w.config.Extensions2 {
-						contnt := re2.ReplaceAll(textB, []byte(ext))
-						data = append(data, []byte(contnt))
+		textR := replaceTemplates(reader.Text(), w.templates)
+		textS := strings.Split(textR, "@")
+		for _, text := range textS {
+			textB := []byte(text)
+			if w.config.DirSearchCompat && len(w.config.Extensions) > 0 {
+				if len(w.config.Extensions2) > 0 {
+					if re2.Match(textB) {
+						for _, ext := range w.config.Extensions2 {
+							contnt := re2.ReplaceAll(textB, []byte(ext))
+							data = append(data, []byte(contnt))
+						}
 					}
 				}
-			}
-			if re.Match(textB) {
-				for _, ext := range w.config.Extensions {
-					contnt := re.ReplaceAll(textB, []byte(ext))
-					data = append(data, []byte(contnt))
+				if re.Match(textB) {
+					for _, ext := range w.config.Extensions {
+						contnt := re.ReplaceAll(textB, []byte(ext))
+						data = append(data, []byte(contnt))
+					}
+				} else {
+					if w.config.IgnoreWordlistComments {
+						text, ok = stripComments(text)
+						if !ok {
+							continue
+						}
+					}
+					data = append(data, []byte(text))
 				}
 			} else {
 				if w.config.IgnoreWordlistComments {
@@ -154,18 +165,10 @@ func (w *WordlistInput) readFile(path string) error {
 					}
 				}
 				data = append(data, []byte(text))
-			}
-		} else {
-			if w.config.IgnoreWordlistComments {
-				text, ok = stripComments(text)
-				if !ok {
-					continue
-				}
-			}
-			data = append(data, []byte(text))
-			if w.keyword == "FUZZ" && len(w.config.Extensions) > 0 {
-				for _, ext := range w.config.Extensions {
-					data = append(data, []byte(text+ext))
+				if w.keyword == "FUZZ" && len(w.config.Extensions) > 0 {
+					for _, ext := range w.config.Extensions {
+						data = append(data, []byte(text+ext))
+					}
 				}
 			}
 		}
@@ -201,8 +204,27 @@ func stripComments(text string) (string, bool) {
 	return text[:index], true
 }
 
+func isSplit(r rune) bool {
+	return r == '-' || r == '.'
+}
+
 // replaceTemplates performs the templated dynamic replacements
 func replaceTemplates(text string, t map[string]string) string {
+	var text2 string
+	if strings.Contains(text, "{SUB}") {
+		if t["SUB"] != "" {
+			s := strings.FieldsFunc(t["SUB"], isSplit)
+			if len(s) > 0 {
+				for _, x := range s {
+					text2 += strings.ReplaceAll(text, "{SUB}", x) + "@"
+				}
+			}
+			text2 += strings.ReplaceAll(text, "{SUB}", t["SUB"])
+			text = text2
+		} else {
+			return ""
+		}
+	}
 	if strings.Contains(text, "{YYYY}") {
 		if t["YYYY"] != "" {
 			text = strings.ReplaceAll(text, "{YYYY}", t["YYYY"])
@@ -227,13 +249,6 @@ func replaceTemplates(text string, t map[string]string) string {
 	if strings.Contains(text, "{DD}") {
 		if t["DD"] != "" {
 			text = strings.ReplaceAll(text, "{DD}", t["DD"])
-		} else {
-			return ""
-		}
-	}
-	if strings.Contains(text, "{SUB}") {
-		if t["SUB"] != "" {
-			text = strings.ReplaceAll(text, "{SUB}", t["SUB"])
 		} else {
 			return ""
 		}
