@@ -214,7 +214,7 @@ func replaceTemplates(text string, t map[string]string) string {
 	if strings.Contains(text, "{SUB}") {
 		if t["SUB"] != "" {
 			s := strings.FieldsFunc(t["SUB"], isSplit)
-			if len(s) > 0 {
+			if len(s) > 0 && !strings.Contains(text, "{HOST}") {
 				for _, x := range s {
 					text2 += strings.ReplaceAll(text, "{SUB}", x) + "@"
 				}
