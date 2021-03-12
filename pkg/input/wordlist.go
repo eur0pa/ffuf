@@ -214,19 +214,33 @@ func replaceTemplates(text string, t map[string]string) string {
 	if strings.Contains(text, "{SUB}") {
 		if t["SUB"] != "" {
 			s := strings.FieldsFunc(t["SUB"], isSplit)
-			if len(s) > 0 && (!strings.Contains(text, "{HOST}") || !strings.Contains(text, "{TLD}")) {
+			if len(s) > 0 && (!strings.Contains(text, "{HOST}") && !strings.Contains(text, "{TLD}")) {
 				for _, x := range s {
 					text2 += strings.ReplaceAll(text, "{SUB}", x) + "@"
 				}
 			}
 			s = strings.Split(t["SUB"], ".")
-			if len(s) > 0 && (!strings.Contains(text, "{HOST}") || !strings.Contains(text, "{TLD}")) {
+			if len(s) > 0 && (!strings.Contains(text, "{HOST}") && !strings.Contains(text, "{TLD}")) {
 				for _, x := range s {
 					text2 += strings.ReplaceAll(text, "{SUB}", x) + "@"
 				}
 			}
 			text2 += strings.ReplaceAll(text, "{SUB}", t["SUB"])
 			text = text2
+		} else {
+			return ""
+		}
+	}
+	if strings.Contains(text, "{HOST}") {
+		if t["HOST"] != "" {
+			text = strings.ReplaceAll(text, "{HOST}", t["HOST"])
+		} else {
+			return ""
+		}
+	}
+	if strings.Contains(text, "{TLD}") {
+		if t["TLD"] != "" {
+			text = strings.ReplaceAll(text, "{TLD}", t["TLD"])
 		} else {
 			return ""
 		}
@@ -255,20 +269,6 @@ func replaceTemplates(text string, t map[string]string) string {
 	if strings.Contains(text, "{DD}") {
 		if t["DD"] != "" {
 			text = strings.ReplaceAll(text, "{DD}", t["DD"])
-		} else {
-			return ""
-		}
-	}
-	if strings.Contains(text, "{HOST}") {
-		if t["HOST"] != "" {
-			text = strings.ReplaceAll(text, "{HOST}", t["HOST"])
-		} else {
-			return ""
-		}
-	}
-	if strings.Contains(text, "{TLD}") {
-		if t["TLD"] != "" {
-			text = strings.ReplaceAll(text, "{TLD}", t["TLD"])
 		} else {
 			return ""
 		}
