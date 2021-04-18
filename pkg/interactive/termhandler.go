@@ -3,8 +3,8 @@ package interactive
 import (
 	"bufio"
 	"fmt"
-	"github.com/ffuf/ffuf/pkg/ffuf"
-	"github.com/ffuf/ffuf/pkg/filter"
+	"github.com/eur0pa/ffuf/pkg/ffuf"
+	"github.com/eur0pa/ffuf/pkg/filter"
 	"strconv"
 	"strings"
 	"time"

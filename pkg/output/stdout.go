@@ -265,7 +265,7 @@ func (s *Stdoutput) writeToAll(filename string, config *ffuf.Config, res []ffuf.
 	}
 
 	s.config.OutputFile = BaseFilename + ".txt"
-	err = writeTXT(s.config, s.Results)
+	err = writeTXT(filename, s.config, s.Results)
 	if err != nil {
 		s.Error(err.Error())
 	}

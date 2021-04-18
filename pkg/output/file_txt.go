@@ -8,12 +8,12 @@ import (
 	"github.com/eur0pa/ffuf/pkg/ffuf"
 )
 
-func writeTXT(config *ffuf.Config, res []Result) error {
+func writeTXT(filename string, config *ffuf.Config, res []ffuf.Result) error {
 	if config.OutputCreateEmptyFile && (len(res) == 0) {
 		return nil
 	}
 
-	f, err := os.Create(config.OutputFile)
+	f, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func writeTXT(config *ffuf.Config, res []Result) error {
 	return nil
 }
 
-func toTXT(r Result) string {
+func toTXT(r ffuf.Result) string {
 	res := strconv.FormatInt(r.StatusCode, 10) + " " +
 		strconv.FormatInt(r.ContentLength, 10) + " " +
 		strconv.FormatInt(r.ContentWords, 10) + " " +
