@@ -12,6 +12,7 @@ import (
 	"github.com/eur0pa/ffuf/pkg/ffuf"
 	"github.com/eur0pa/ffuf/pkg/filter"
 	"github.com/eur0pa/ffuf/pkg/input"
+	"github.com/eur0pa/ffuf/pkg/interactive"
 	"github.com/eur0pa/ffuf/pkg/output"
 	"github.com/eur0pa/ffuf/pkg/runner"
 )
@@ -94,8 +95,9 @@ func ParseFlags(opts *ffuf.ConfigOptions) *ffuf.ConfigOptions {
 	flag.StringVar(&opts.HTTP.Data, "data-ascii", opts.HTTP.Data, "POST data (alias of -d)")
 	flag.StringVar(&opts.HTTP.Data, "data-binary", opts.HTTP.Data, "POST data (alias of -d)")
 	flag.StringVar(&opts.HTTP.Method, "X", opts.HTTP.Method, "HTTP method to use")
-	flag.StringVar(&opts.HTTP.ProxyURL, "x", opts.HTTP.ProxyURL, "HTTP Proxy URL")
+	flag.StringVar(&opts.HTTP.ProxyURL, "x", opts.HTTP.ProxyURL, "Proxy URL (SOCKS5 or HTTP). For example: http://127.0.0.1:8080 or socks5://127.0.0.1:8080")
 	flag.StringVar(&opts.HTTP.ReplayProxyURL, "replay-proxy", opts.HTTP.ReplayProxyURL, "Replay matched requests using this proxy.")
+	flag.StringVar(&opts.HTTP.RecursionStrategy, "recursion-strategy", opts.HTTP.RecursionStrategy, "Recursion strategy: \"default\" for a redirect based, and \"greedy\" to recurse on all matches")
 	flag.StringVar(&opts.HTTP.URL, "u", opts.HTTP.URL, "Target URL")
 	flag.StringVar(&opts.Input.Extensions, "e", opts.Input.Extensions, "Comma separated list of extensions. Extends FUZZ keyword.")
 	flag.StringVar(&opts.Input.Extensions2, "e2", opts.Input.Extensions2, "Comma separated list of extensions. Extends FUZZ keyword.")
@@ -201,6 +203,12 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error in autocalibration, exiting: %s\n", err)
 		os.Exit(1)
 	}
+	go func() {
+		err := interactive.Handle(job)
+		if err != nil {
+			log.Printf("Error while trying to initialize interactive session: %s", err)
+		}
+	}()
 
 	// Job handles waiting for goroutines to complete itself
 	job.Start()
