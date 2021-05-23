@@ -11,17 +11,17 @@
 
 A fast web fuzzer written in Go.
 
-- [Installation](https://github.com/ffuf/ffuf#installation)
-- [Example usage](https://github.com/ffuf/ffuf#example-usage)
-    - [Content discovery](https://github.com/ffuf/ffuf#typical-directory-discovery)
-    - [Vhost discovery](https://github.com/ffuf/ffuf#virtual-host-discovery-without-dns-records)
-    - [Parameter fuzzing](https://github.com/ffuf/ffuf#get-parameter-fuzzing)
-    - [POST data fuzzing](https://github.com/ffuf/ffuf#post-data-fuzzing)
-    - [Using external mutator](https://github.com/ffuf/ffuf#using-external-mutator-to-produce-test-cases)
-    - [Configuration files](https://github.com/ffuf/ffuf#configuration-files)
-- [Help](https://github.com/ffuf/ffuf#usage)
-    - [Interactive mode](https://github.com/ffuf/ffuf#interactive-mode)
-- [Sponsorware?](https://github.com/ffuf/ffuf#sponsorware)
+- [Installation](https://github.com/eur0pa/ffuf#installation)
+- [Example usage](https://github.com/eur0pa/ffuf#example-usage)
+    - [Content discovery](https://github.com/eur0pa/ffuf#typical-directory-discovery)
+    - [Vhost discovery](https://github.com/eur0pa/ffuf#virtual-host-discovery-without-dns-records)
+    - [Parameter fuzzing](https://github.com/eur0pa/ffuf#get-parameter-fuzzing)
+    - [POST data fuzzing](https://github.com/eur0pa/ffuf#post-data-fuzzing)
+    - [Using external mutator](https://github.com/eur0pa/ffuf#using-external-mutator-to-produce-test-cases)
+    - [Configuration files](https://github.com/eur0pa/ffuf#configuration-files)
+- [Help](https://github.com/eur0pa/ffuf#usage)
+    - [Interactive mode](https://github.com/eur0pa/ffuf#interactive-mode)
+- [Sponsorware?](https://github.com/eur0pa/ffuf#sponsorware)
 
 ## Sponsors
 [![Offensive Security](_img/offsec-logo.png)](https://www.offensive-security.com/)
@@ -289,7 +289,7 @@ job from the beginning.
 
 `ffuf` employs a sponsorware model. This means that all new features developed by its author are initially exclusively 
 available for their sponsors. 30 days after the exclusive release, all the new features will be released at the freely
-available open source repository at https://github.com/ffuf/ffuf . 
+available open source repository at https://github.com/eur0pa/ffuf . 
 
 This model enables me to provide concrete benefits for the generous individuals and companies that enable me to work on 
 `ffuf`. The different sponsorship tiers can be seen [here](https://github.com/sponsors/joohoi).
