@@ -445,14 +445,14 @@ func (s *Stdoutput) resultMultiline(res ffuf.Result) {
 
 //Custom clickable stdout format
 func (s *Stdoutput) resultNormal(res ffuf.Result) {
-	resnormal := fmt.Sprintf("%s%-3d %-9d %-5d %-5d %s", TERMINAL_CLEAR_LINE, res.StatusCode, res.ContentLength, res.ContentWords, res.ContentLines, res.Url)
+	resnormal := fmt.Sprintf("%s%s%-3d %-9d %-5d %-5d %s", TERMINAL_CLEAR_LINE, s.colorize(res.StatusCode), res.StatusCode, res.ContentLength, res.ContentWords, res.ContentLines, res.Url)
 
 	redirectLocation := res.RedirectLocation
 	if redirectLocation != "" {
 		resnormal = fmt.Sprintf("%s -> %s", resnormal, redirectLocation)
 	}
 
-	fmt.Println(s.colorize(resnormal, res.StatusCode))
+	fmt.Println(resnormal + ANSI_CLEAR)
 }
 
 //Original stdout format
