@@ -6,13 +6,13 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/http/httptrace"
 	"net/http/httputil"
 	"net/textproto"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/eur0pa/ffuf/pkg/ffuf"
 )
@@ -58,6 +58,7 @@ func NewSimpleRunner(conf *ffuf.Config, replay bool) ffuf.RunnerProvider {
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true,
 				Renegotiation:      tls.RenegotiateOnceAsClient,
+				ServerName:         conf.SNI,
 			},
 		}}
 
@@ -96,7 +97,21 @@ func (r *SimpleRunner) Execute(req *ffuf.Request) (ffuf.Response, error) {
 	var err error
 	var rawreq []byte
 	data := bytes.NewReader(req.Data)
+
+	var start time.Time
+	var firstByteTime time.Duration
+
+	trace := &httptrace.ClientTrace{
+		WroteRequest: func(wri httptrace.WroteRequestInfo) {
+			start = time.Now() // begin the timer after the request is fully written
+		},
+		GotFirstResponseByte: func() {
+			firstByteTime = time.Since(start) // record when the first byte of the response was received
+		},
+	}
+
 	httpreq, err = http.NewRequestWithContext(r.config.Context, req.Method, req.Url, data)
+
 	if err != nil {
 		return ffuf.Response{}, err
 	}
@@ -112,7 +127,7 @@ func (r *SimpleRunner) Execute(req *ffuf.Request) (ffuf.Response, error) {
 	}
 
 	req.Host = httpreq.Host
-	httpreq = httpreq.WithContext(r.config.Context)
+	httpreq = httpreq.WithContext(httptrace.WithClientTrace(r.config.Context, trace))
 	for k, v := range req.Headers {
 		httpreq.Header.Set(k, v)
 	}
@@ -146,7 +161,7 @@ func (r *SimpleRunner) Execute(req *ffuf.Request) (ffuf.Response, error) {
 	}
 
 	if respbody, err := ioutil.ReadAll(httpresp.Body); err == nil {
-		resp.ContentLength = int64(utf8.RuneCountInString(string(respbody)))
+		resp.ContentLength = int64(len(string(respbody)))
 		resp.Data = respbody
 	}
 
@@ -154,6 +169,7 @@ func (r *SimpleRunner) Execute(req *ffuf.Request) (ffuf.Response, error) {
 	linesSize := len(strings.Split(string(resp.Data), "\n"))
 	resp.ContentWords = int64(wordsSize)
 	resp.ContentLines = int64(linesSize)
+	resp.Time = firstByteTime
 
 	return resp, nil
 }

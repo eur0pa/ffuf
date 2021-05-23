@@ -57,6 +57,9 @@ const (
 			  <th>Lines</th>
 			  <th>URL</th>
 			  <th>Redirect location</th>
+			  <th>Type</th>
+              <th>Duration</th>
+			  <th>Resultfile</th>
           </tr>
         </thead>
 
@@ -69,6 +72,9 @@ const (
 					<td>{{ $result.ContentLines }}</td>
                     <td><a href="{{ $result.Url }}">{{ $result.Url }}</a></td>
                     <td><a href="{{ $result.RedirectLocation }}">{{ $result.RedirectLocation }}</a></td>
+					<td>{{ $result.ContentType }}</td>
+                    <td>{{ $result.Duration }}</td>
+                    <td>{{ $result.ResultFile }}</td>
                 </tr>
             {{ end }}
         </tbody>
@@ -145,11 +151,6 @@ func colorizeResults(results []ffuf.Result) []ffuf.Result {
 }
 
 func writeHTML(filename string, config *ffuf.Config, results []ffuf.Result) error {
-
-	if config.OutputCreateEmptyFile && (len(results) == 0) {
-		return nil
-	}
-
 	results = colorizeResults(results)
 
 	ti := time.Now()

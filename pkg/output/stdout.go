@@ -26,14 +26,16 @@ const (
 )
 
 type Stdoutput struct {
-	config  *ffuf.Config
-	Results []ffuf.Result
+	config         *ffuf.Config
+	Results        []ffuf.Result
+	CurrentResults []ffuf.Result
 }
 
 func NewStdoutput(conf *ffuf.Config) *Stdoutput {
 	var outp Stdoutput
 	outp.config = conf
-	outp.Results = []ffuf.Result{}
+	outp.Results = make([]ffuf.Result, 0)
+	outp.CurrentResults = make([]ffuf.Result, 0)
 	return &outp
 }
 
@@ -140,17 +142,23 @@ func (s *Stdoutput) Banner() {
 
 // Reset resets the result slice
 func (s *Stdoutput) Reset() {
-	s.Results = make([]ffuf.Result, 0)
+	s.CurrentResults = make([]ffuf.Result, 0)
+}
+
+// Cycle moves the CurrentResults to Results and resets the results slice
+func (s *Stdoutput) Cycle() {
+	s.Results = append(s.Results, s.CurrentResults...)
+	s.Reset()
 }
 
 // GetResults returns the result slice
-func (s *Stdoutput) GetResults() []ffuf.Result {
-	return s.Results
+func (s *Stdoutput) GetCurrentResults() []ffuf.Result {
+	return s.CurrentResults
 }
 
 // SetResults sets the result slice
-func (s *Stdoutput) SetResults(results []ffuf.Result) {
-	s.Results = results
+func (s *Stdoutput) SetCurrentResults(results []ffuf.Result) {
+	s.CurrentResults = results
 }
 
 func (s *Stdoutput) Progress(status ffuf.Progress) {
@@ -224,42 +232,38 @@ func (s *Stdoutput) writeToAll(filename string, config *ffuf.Config, res []ffuf.
 	// Go through each type of write, adding
 	// the suffix to each output file.
 
-	if config.OutputCreateEmptyFile && (len(res) == 0) {
-		return nil
-	}
-
 	s.config.OutputFile = BaseFilename + ".json"
-	err = writeJSON(filename, s.config, s.Results)
+	err = writeJSON(filename, s.config, res)
 	if err != nil {
 		s.Error(err.Error())
 	}
 
 	s.config.OutputFile = BaseFilename + ".ejson"
-	err = writeEJSON(filename, s.config, s.Results)
+	err = writeEJSON(filename, s.config, res)
 	if err != nil {
 		s.Error(err.Error())
 	}
 
 	s.config.OutputFile = BaseFilename + ".html"
-	err = writeHTML(filename, s.config, s.Results)
+	err = writeHTML(filename, s.config, res)
 	if err != nil {
 		s.Error(err.Error())
 	}
 
 	s.config.OutputFile = BaseFilename + ".md"
-	err = writeMarkdown(filename, s.config, s.Results)
+	err = writeMarkdown(filename, s.config, res)
 	if err != nil {
 		s.Error(err.Error())
 	}
 
 	s.config.OutputFile = BaseFilename + ".csv"
-	err = writeCSV(filename, s.config, s.Results, false)
+	err = writeCSV(filename, s.config, res, false)
 	if err != nil {
 		s.Error(err.Error())
 	}
 
 	s.config.OutputFile = BaseFilename + ".ecsv"
-	err = writeCSV(filename, s.config, s.Results, true)
+	err = writeCSV(filename, s.config, res, true)
 	if err != nil {
 		s.Error(err.Error())
 	}
@@ -277,23 +281,27 @@ func (s *Stdoutput) writeToAll(filename string, config *ffuf.Config, res []ffuf.
 // SaveFile saves the current results to a file of a given type
 func (s *Stdoutput) SaveFile(filename, format string) error {
 	var err error
+	if s.config.OutputSkipEmptyFile && len(s.Results) == 0 {
+		s.Info("No results and -or defined, output file not written.")
+		return err
+	}
 	switch format {
 	case "all":
-		err = s.writeToAll(filename, s.config, s.Results)
+		err = s.writeToAll(filename, s.config, append(s.Results, s.CurrentResults...))
 	case "json":
-		err = writeJSON(filename, s.config, s.Results)
+		err = writeJSON(filename, s.config, append(s.Results, s.CurrentResults...))
 	case "ejson":
-		err = writeEJSON(filename, s.config, s.Results)
+		err = writeEJSON(filename, s.config, append(s.Results, s.CurrentResults...))
 	case "html":
-		err = writeHTML(filename, s.config, s.Results)
+		err = writeHTML(filename, s.config, append(s.Results, s.CurrentResults...))
 	case "md":
-		err = writeMarkdown(filename, s.config, s.Results)
+		err = writeMarkdown(filename, s.config, append(s.Results, s.CurrentResults...))
 	case "csv":
-		err = writeCSV(filename, s.config, s.Results, false)
+		err = writeCSV(filename, s.config, append(s.Results, s.CurrentResults...), false)
 	case "ecsv":
-		err = writeCSV(filename, s.config, s.Results, true)
+		err = writeCSV(filename, s.config, append(s.Results, s.CurrentResults...), true)
 	case "txt":
-		err = writeTXT(filename, s.config, s.Results)
+		err = writeTXT(filename, s.config, append(s.Results, s.CurrentResults...))
 	}
 	return err
 }
@@ -331,10 +339,11 @@ func (s *Stdoutput) Result(resp ffuf.Response) {
 		ContentType:      resp.ContentType,
 		RedirectLocation: resp.GetRedirectLocation(false),
 		Url:              resp.Request.Url,
+		Duration:         resp.Time,
 		ResultFile:       resp.ResultFile,
 		Host:             resp.Request.Host,
 	}
-	s.Results = append(s.Results, sResult)
+	s.CurrentResults = append(s.CurrentResults, sResult)
 	// Output the result
 	s.PrintResult(sResult)
 }
@@ -343,7 +352,7 @@ func (s *Stdoutput) writeResultToFile(resp ffuf.Response) string {
 	var fileContent, fileName, filePath string
 	// Create directory if needed
 	if s.config.OutputDirectory != "" {
-		err := os.Mkdir(s.config.OutputDirectory, 0750)
+		err := os.MkdirAll(s.config.OutputDirectory, 0750)
 		if err != nil {
 			if !os.IsExist(err) {
 				s.Error(err.Error())
@@ -410,8 +419,7 @@ func (s *Stdoutput) resultQuiet(res ffuf.Result) {
 func (s *Stdoutput) resultMultiline(res ffuf.Result) {
 	var res_hdr, res_str string
 	res_str = "%s%s    * %s: %s\n"
-	res_hdr = fmt.Sprintf("%s[Status: %d, Size: %d, Words: %d, Lines: %d]", TERMINAL_CLEAR_LINE, res.StatusCode, res.ContentLength, res.ContentWords, res.ContentLines)
-	res_hdr = s.colorize(res_hdr, res.StatusCode)
+	res_hdr = fmt.Sprintf("%s%s[Status: %d, Size: %d, Words: %d, Lines: %d, Duration: %dms]%s", TERMINAL_CLEAR_LINE, s.colorize(res.StatusCode), res.StatusCode, res.ContentLength, res.ContentWords, res.ContentLines, res.Duration.Milliseconds(), ANSI_CLEAR)
 	reslines := ""
 	if s.config.Verbose {
 		reslines = fmt.Sprintf("%s%s| URL | %s\n", reslines, TERMINAL_CLEAR_LINE, res.Url)
@@ -449,13 +457,13 @@ func (s *Stdoutput) resultNormal(res ffuf.Result) {
 
 //Original stdout format
 func (s *Stdoutput) resultOriginal(res ffuf.Result) {
-	resnormal := fmt.Sprintf("%s%-23s [Status: %s, Size: %d, Words: %d, Lines: %d]", TERMINAL_CLEAR_LINE, s.prepareInputsOneLine(res), s.colorize(fmt.Sprintf("%d", res.StatusCode), res.StatusCode), res.ContentLength, res.ContentWords, res.ContentLines)
+	resnormal := fmt.Sprintf("%s%s%-23s [Status: %d, Size: %d, Words: %d, Lines: %d, Duration: %dms]%s", TERMINAL_CLEAR_LINE, s.colorize(res.StatusCode), s.prepareInputsOneLine(res), res.StatusCode, res.ContentLength, res.ContentWords, res.ContentLines, res.Duration.Milliseconds(), ANSI_CLEAR)
 	fmt.Println(resnormal)
 }
 
-func (s *Stdoutput) colorize(input string, status int64) string {
+func (s *Stdoutput) colorize(status int64) string {
 	if !s.config.Colors {
-		return input
+		return ""
 	}
 	colorCode := ANSI_CLEAR
 	if status >= 200 && status < 300 {
@@ -470,7 +478,7 @@ func (s *Stdoutput) colorize(input string, status int64) string {
 	if status >= 500 && status < 600 {
 		colorCode = ANSI_RED
 	}
-	return fmt.Sprintf("%s%s%s", colorCode, input, ANSI_CLEAR)
+	return colorCode
 }
 
 func printOption(name []byte, value []byte) {

@@ -37,6 +37,7 @@ type HTTPOptions struct {
 	RecursionDepth    int
 	RecursionStrategy string
 	ReplayProxyURL    string
+	SNI               string
 	Timeout           int
 	URL               string
 }
@@ -49,6 +50,7 @@ type GeneralOptions struct {
 	Delay                  string
 	MaxTime                int
 	MaxTimeJob             int
+	Noninteractive         bool
 	Quiet                  bool
 	Rate                   int
 	ShowVersion            bool `toml:"-"`
@@ -76,12 +78,12 @@ type InputOptions struct {
 }
 
 type OutputOptions struct {
-	DebugLog              string
-	OutputDirectory       string
-	OutputFile            string
-	OutputFormat          string
-	OriginalOutput        bool
-	OutputCreateEmptyFile bool
+	DebugLog            string
+	OutputDirectory     string
+	OutputFile          string
+	OutputFormat        string
+	OriginalOutput      bool
+	OutputSkipEmptyFile bool
 }
 
 type FilterOptions struct {
@@ -89,6 +91,7 @@ type FilterOptions struct {
 	Regexp string
 	Size   string
 	Status string
+	Time   string
 	Words  string
 }
 
@@ -97,6 +100,7 @@ type MatcherOptions struct {
 	Regexp string
 	Size   string
 	Status string
+	Time   string
 	Words  string
 }
 
@@ -107,12 +111,14 @@ func NewConfigOptions() *ConfigOptions {
 	c.Filter.Regexp = ""
 	c.Filter.Size = ""
 	c.Filter.Status = ""
+	c.Filter.Time = ""
 	c.Filter.Words = ""
 	c.General.AutoCalibration = false
 	c.General.Colors = false
 	c.General.Delay = ""
 	c.General.MaxTime = 0
 	c.General.MaxTimeJob = 0
+	c.General.Noninteractive = false
 	c.General.Quiet = false
 	c.General.Rate = 0
 	c.General.ShowVersion = false
@@ -133,6 +139,7 @@ func NewConfigOptions() *ConfigOptions {
 	c.HTTP.RecursionStrategy = "default"
 	c.HTTP.ReplayProxyURL = ""
 	c.HTTP.Timeout = 10
+	c.HTTP.SNI = ""
 	c.HTTP.URL = ""
 	c.Input.DirSearchCompat = false
 	c.Input.Extensions = ""
@@ -146,13 +153,14 @@ func NewConfigOptions() *ConfigOptions {
 	c.Matcher.Regexp = ""
 	c.Matcher.Size = ""
 	c.Matcher.Status = "200,204,301,302,307,401,403,405,500"
+	c.Matcher.Time = ""
 	c.Matcher.Words = ""
 	c.Output.DebugLog = ""
 	c.Output.OutputDirectory = ""
 	c.Output.OutputFile = ""
 	c.Output.OutputFormat = "json"
 	c.Output.OriginalOutput = false
-	c.Output.OutputCreateEmptyFile = false
+	c.Output.OutputSkipEmptyFile = false
 	return c
 }
 
@@ -259,6 +267,11 @@ func ConfigFromOptions(parseOpts *ConfigOptions, ctx context.Context, cancel con
 		conf.Url = parseOpts.HTTP.URL
 	}
 
+	// Prepare SNI
+	if parseOpts.HTTP.SNI != "" {
+		conf.SNI = parseOpts.HTTP.SNI
+	}
+
 	//Prepare headers and make canonical
 	for _, v := range parseOpts.HTTP.Headers {
 		hs := strings.SplitN(v, ":", 2)
@@ -267,14 +280,14 @@ func ConfigFromOptions(parseOpts *ConfigOptions, ctx context.Context, cancel con
 			// except if used in custom defined header
 			var CanonicalNeeded = true
 			for _, a := range conf.CommandKeywords {
-				if a == hs[0] {
+				if strings.Contains(hs[0], a) {
 					CanonicalNeeded = false
 				}
 			}
 			// check if part of InputProviders
 			if CanonicalNeeded {
 				for _, b := range conf.InputProviders {
-					if b.Keyword == hs[0] {
+					if strings.Contains(hs[0], b.Keyword) {
 						CanonicalNeeded = false
 					}
 				}
@@ -411,7 +424,7 @@ func ConfigFromOptions(parseOpts *ConfigOptions, ctx context.Context, cancel con
 	conf.OutputFile = parseOpts.Output.OutputFile
 	conf.OutputDirectory = parseOpts.Output.OutputDirectory
 	conf.OriginalOutput = parseOpts.Output.OriginalOutput
-	conf.OutputCreateEmptyFile = parseOpts.Output.OutputCreateEmptyFile
+	conf.OutputSkipEmptyFile = parseOpts.Output.OutputSkipEmptyFile
 	conf.IgnoreBody = parseOpts.HTTP.IgnoreBody
 	conf.Quiet = parseOpts.General.Quiet
 	conf.StopOn403 = parseOpts.General.StopOn403
@@ -426,6 +439,7 @@ func ConfigFromOptions(parseOpts *ConfigOptions, ctx context.Context, cancel con
 	conf.Timeout = parseOpts.HTTP.Timeout
 	conf.MaxTime = parseOpts.General.MaxTime
 	conf.MaxTimeJob = parseOpts.General.MaxTimeJob
+	conf.Noninteractive = parseOpts.General.Noninteractive
 	conf.Verbose = parseOpts.General.Verbose
 	conf.Waf1 = parseOpts.General.Waf1
 	conf.Waf2 = parseOpts.General.Waf2
@@ -520,6 +534,12 @@ func parseRawRequest(parseOpts *ConfigOptions, conf *Config) error {
 	}
 	conf.Data = string(b)
 
+	// Remove newline (typically added by the editor) at the end of the file
+	if strings.HasSuffix(conf.Data, "\r\n") {
+		conf.Data = conf.Data[:len(conf.Data)-2]
+	} else if strings.HasSuffix(conf.Data, "\n") {
+		conf.Data = conf.Data[:len(conf.Data)-1]
+	}
 	return nil
 }
 

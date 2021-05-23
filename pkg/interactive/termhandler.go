@@ -3,11 +3,12 @@ package interactive
 import (
 	"bufio"
 	"fmt"
-	"github.com/eur0pa/ffuf/pkg/ffuf"
-	"github.com/eur0pa/ffuf/pkg/filter"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/eur0pa/ffuf/pkg/ffuf"
+	"github.com/eur0pa/ffuf/pkg/filter"
 )
 
 type interactive struct {
@@ -53,12 +54,12 @@ func (i *interactive) handleInput(in []byte) {
 			i.paused = false
 			i.Job.Resume()
 		case "restart":
-			i.Job.Reset()
+			i.Job.Reset(false)
 			i.paused = false
 			i.Job.Output.Info("Restarting the current ffuf job!")
 			i.Job.Resume()
 		case "show":
-			for _, r := range i.Job.Output.GetResults() {
+			for _, r := range i.Job.Output.GetCurrentResults() {
 				i.Job.Output.PrintResult(r)
 			}
 		case "savejson":
@@ -110,6 +111,15 @@ func (i *interactive) handleInput(in []byte) {
 				i.updateFilter("size", args[1])
 				i.Job.Output.Info("New response size filter value set")
 			}
+		case "ft":
+			if len(args) < 2 {
+				i.Job.Output.Error("Please define a value for response time filter, or \"none\" for removing it")
+			} else if len(args) > 2 {
+				i.Job.Output.Error("Too many arguments for \"ft\"")
+			} else {
+				i.updateFilter("time", args[1])
+				i.Job.Output.Info("New response time filter value set")
+			}
 		case "queueshow":
 			i.printQueue()
 		case "queuedel":
@@ -150,7 +160,7 @@ func (i *interactive) updateFilter(name, value string) {
 		}
 
 		results := make([]ffuf.Result, 0)
-		for _, res := range i.Job.Output.GetResults() {
+		for _, res := range i.Job.Output.GetCurrentResults() {
 			fakeResp := &ffuf.Response{
 				StatusCode:    res.StatusCode,
 				ContentLines:  res.ContentLength,
@@ -162,7 +172,7 @@ func (i *interactive) updateFilter(name, value string) {
 				results = append(results, res)
 			}
 		}
-		i.Job.Output.SetResults(results)
+		i.Job.Output.SetCurrentResults(results)
 	}
 }
 
@@ -205,7 +215,7 @@ func (i *interactive) printPrompt() {
 }
 
 func (i *interactive) printHelp() {
-	var fc, fl, fs, fw string
+	var fc, fl, fs, ft, fw string
 	for name, filter := range i.Job.Config.Filters {
 		switch name {
 		case "status":
@@ -216,6 +226,8 @@ func (i *interactive) printHelp() {
 			fw = "(active: " + filter.Repr() + ")"
 		case "size":
 			fs = "(active: " + filter.Repr() + ")"
+		case "time":
+			ft = "(active: " + filter.Repr() + ")"
 		}
 	}
 	help := `
@@ -224,14 +236,15 @@ available commands:
  fl [value]             - (re)configure line count filter %s
  fw [value]             - (re)configure word count filter %s
  fs [value]             - (re)configure size filter %s
+ ft [value]				- (re)configure time filter %s
  queueshow              - show recursive job queue
  queuedel [number]      - delete a recursion job in the queue
  queueskip              - advance to the next queued recursion job
  restart                - restart and resume the current ffuf job
  resume                 - resume current ffuf job (or: ENTER) 
- show                   - show results
+ show                   - show results for the current job
  savejson [filename]    - save current matches to a file
  help                   - you are looking at it
 `
-	i.Job.Output.Raw(fmt.Sprintf(help, fc, fl, fw, fs))
+	i.Job.Output.Raw(fmt.Sprintf(help, fc, fl, fw, fs, ft))
 }
